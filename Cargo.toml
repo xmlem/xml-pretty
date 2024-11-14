@@ -5,7 +5,7 @@ authors = ["Brendan Molloy <brendan@bbqsrc.net>"]
 edition = "2021"
 description = "XML prettifer binary using xmlem"
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/bbqsrc/xml-pretty"
+repository = "https://github.com/xmlem/xml-pretty"
 categories = ["command-line-utilities", "encoding"]
 keywords = ["xml", "mlem", "cli"]
 
