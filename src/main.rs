@@ -153,16 +153,16 @@ fn prettify(
     uses_hex_entities: bool,
     indent_text_nodes: bool,
 ) -> String {
-    doc.to_string_pretty_with_config(&display::Config {
-        is_pretty: true,
-        indent: indent.unwrap_or(2),
-        end_pad: end_pad.unwrap_or(1),
-        max_line_length: max_line_length.unwrap_or(120),
-        entity_mode: if uses_hex_entities {
-            display::EntityMode::Hex
-        } else {
-            display::EntityMode::Standard
-        },
-        indent_text_nodes,
-    })
+    doc.to_string_pretty_with_config(
+        &display::Config::default_pretty()
+            .indent(indent.unwrap_or(2))
+            .end_pad(end_pad.unwrap_or(1))
+            .max_line_length(max_line_length.unwrap_or(120))
+            .entity_mode(if uses_hex_entities {
+                display::EntityMode::Hex
+            } else {
+                display::EntityMode::Standard
+            })
+            .indent_text_nodes(indent_text_nodes),
+    )
 }

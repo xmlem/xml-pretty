@@ -13,4 +13,4 @@ keywords = ["xml", "mlem", "cli"]
 anyhow = "1.0.57"
 atty = "0.2.14"
 gumdrop = "0.8.1"
-xmlem = "0.2.0"
+xmlem = "0.3.0"
