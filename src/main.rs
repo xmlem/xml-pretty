@@ -1,6 +1,6 @@
 use std::{
     fs::{write, File},
-    io::StdinLock,
+    io::{self, StdinLock, IsTerminal},
     path::{Path, PathBuf},
 };
 
@@ -54,7 +54,7 @@ fn main() -> anyhow::Result<()> {
 
     let input_path = if let Some(path) = args.xml_document_path {
         Some(path)
-    } else if atty::is(atty::Stream::Stdin) {
+    } else if io::stdin().is_terminal() {
         eprintln!("ERROR: No XML document provided.");
         eprintln!("Run with -h for usage information.");
         return Ok(());
