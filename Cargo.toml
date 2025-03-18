@@ -1,6 +1,6 @@
 [package]
 name = "xml-pretty"
-version = "0.2.4"
+version = "0.2.5"
 authors = ["Brendan Molloy <brendan@bbqsrc.net>"]
 edition = "2021"
 description = "XML prettifer binary using xmlem"
@@ -12,4 +12,4 @@ keywords = ["xml", "mlem", "cli"]
 [dependencies]
 anyhow = "1.0.57"
 gumdrop = "0.8.1"
-xmlem = "0.3.0"
+xmlem = "0.3.3"
