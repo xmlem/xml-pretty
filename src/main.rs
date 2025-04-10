@@ -1,7 +1,8 @@
 use std::{
     fs::{write, File},
-    io::{self, StdinLock, IsTerminal},
+    io::{self, IsTerminal, Read, StdinLock},
     path::{Path, PathBuf},
+    str::FromStr,
 };
 
 use anyhow::Context;
@@ -21,6 +22,9 @@ struct Args {
 
     #[options(short = "r", long = "replace", help = "replace input file with output")]
     is_replace: bool,
+
+    #[options(short = "c", long = "lint", help = "lint document without formatting")]
+    lint_mode: bool,
 
     #[options(help = "number of spaces to indent (default: 2)")]
     indent: Option<usize>,
@@ -73,9 +77,9 @@ fn main() -> anyhow::Result<()> {
         args.output_path
     };
 
-    let text = if let Some(input_path) = input_path {
+    let (formatted, original) = if let Some(ref input_path) = input_path {
         prettify_file(
-            &input_path,
+            input_path,
             args.indent,
             args.end_pad,
             args.max_line_length,
@@ -97,10 +101,26 @@ fn main() -> anyhow::Result<()> {
         .context("Failed to prettify from stdin")?
     };
 
+    if args.lint_mode {
+        if formatted == original {
+            return Ok(());
+        } else {
+            return Err(anyhow::anyhow!(
+                "xml-pretty --lint failed for document {}",
+                if input_path.is_some() {
+                    format!("at path: `{}`", input_path.as_ref().unwrap().display())
+                } else {
+                    "from stdin".to_string()
+                }
+            ));
+        }
+    }
+
     if let Some(path) = output_path {
-        write(&path, text).with_context(|| format!("Failed to write to '{}'", path.display()))?;
+        write(&path, formatted)
+            .with_context(|| format!("Failed to write to '{}'", path.display()))?;
     } else {
-        println!("{}", text);
+        println!("{}", formatted);
     }
 
     Ok(())
@@ -113,35 +133,47 @@ fn prettify_file(
     max_line_length: Option<usize>,
     uses_hex_entities: bool,
     indent_text_nodes: bool,
-) -> anyhow::Result<String> {
+) -> anyhow::Result<(String, String)> {
     let file = File::open(path)?;
+    let contents = std::fs::read_to_string(path)
+        .with_context(|| format!("Failed to read file '{}'", path.display()))?;
     let doc = Document::from_file(file)?;
-    Ok(prettify(
-        doc,
-        indent,
-        end_pad,
-        max_line_length,
-        uses_hex_entities,
-        indent_text_nodes,
+    Ok((
+        prettify(
+            doc,
+            indent,
+            end_pad,
+            max_line_length,
+            uses_hex_entities,
+            indent_text_nodes,
+        ),
+        contents,
     ))
 }
 
 fn prettify_stdin(
-    stdin: StdinLock,
+    mut stdin: StdinLock,
     indent: Option<usize>,
     end_pad: Option<usize>,
     max_line_length: Option<usize>,
     uses_hex_entities: bool,
     indent_text_nodes: bool,
-) -> anyhow::Result<String> {
-    let doc = Document::from_reader(stdin)?;
-    Ok(prettify(
-        doc,
-        indent,
-        end_pad,
-        max_line_length,
-        uses_hex_entities,
-        indent_text_nodes,
+) -> anyhow::Result<(String, String)> {
+    let mut buffer = String::new();
+    stdin
+        .read_to_string(&mut buffer)
+        .context("Failed to read from stdin")?;
+    let doc = Document::from_str(&buffer)?;
+    Ok((
+        prettify(
+            doc,
+            indent,
+            end_pad,
+            max_line_length,
+            uses_hex_entities,
+            indent_text_nodes,
+        ),
+        buffer,
     ))
 }
 
